@@ -26,7 +26,7 @@ public class Member extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "role_type" ,nullable = false)
     private MemberRoleType roleType;
 
     // 카카오 로그인에 사용될 사용자 정보를 설정하는 메서드
