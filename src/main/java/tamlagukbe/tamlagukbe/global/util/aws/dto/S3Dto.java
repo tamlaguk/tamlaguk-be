@@ -10,8 +10,5 @@ public record S3Dto(
         String fileName,
         Long size
 ) {
-
-
-
-
+      
 }
