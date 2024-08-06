@@ -8,6 +8,4 @@ RUN echo "systemProp.http.proxyHost=krmp-proxy.9rum.cc\nsystemProp.http.proxyPor
 
 RUN ./gradlew clean build
 
-ENV DATABASE_URL=jdbc:mysql://mysql/krampoline
-
 CMD ["java", "-jar", "-Dspring.profiles.active=prod", "/home/gradle/project/build/libs/tamlaguk-be-0.0.1-SNAPSHOT.jar"]
