@@ -11,4 +11,14 @@ public class TestController {
       public ResponseEntity<?> test() {
             return ResponseEntity.ok("test");
       }
+
+      @GetMapping("api/test2")
+      public ResponseEntity<?> test2() {
+            return ResponseEntity.ok("test");
+      }
+
+      @GetMapping("api/ext")
+      public ResponseEntity<?> ext() {
+            return ResponseEntity.ok("ext");
+      }
 }
