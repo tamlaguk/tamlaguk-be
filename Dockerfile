@@ -8,4 +8,4 @@ RUN echo "systemProp.http.proxyHost=krmp-proxy.9rum.cc\nsystemProp.http.proxyPor
 
 RUN ./gradlew clean build
 
-CMD ["java", "-jar", "-Dspring.profiles.active=prod", "/home/gradle/project/build/libs/tamlaguk-be-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "-Dspring.profiles.active=prod", "-Dhttp.proxyPort=3128", "-Dhttp.proxyHost=http://krmp-proxy.9rum.cc", /home/gradle/project/build/libs/tamlaguk-be-0.0.1-SNAPSHOT.jar"]
