@@ -35,6 +35,3 @@ out/
 
 ### VS Code ###
 .vscode/
-
-# Exclude application.yml
-src/main/resources/application.yml
