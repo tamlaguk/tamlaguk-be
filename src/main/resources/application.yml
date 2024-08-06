@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
-    url: jdbc:mariadb://3.34.132.3:3306/tamlaguk?characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    url: jdbc:mariadb://mariadb/tamlaguk?characterEncoding=UTF-8&serverTimezone=Asia/Seoul
     username: root
-    password: s5554549
+    password: root
 
   jpa:
     hibernate:
@@ -17,7 +17,7 @@ spring:
 
   data:
     redis:
-      host: 3.34.132.3
+      host: redis
       port: 6379
 
   jwt:
