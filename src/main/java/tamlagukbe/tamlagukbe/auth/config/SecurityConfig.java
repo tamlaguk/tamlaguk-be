@@ -15,6 +15,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -32,6 +34,11 @@ public class SecurityConfig {
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
     @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
@@ -44,8 +51,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         auth -> auth
                                 .requestMatchers(requestHasRoleUser()).hasRole("USER")
-                                .requestMatchers(requestHasRoleAdmin()).hasRole("ADMIN")
-                                .requestMatchers(requestHasAnyRoleUserAdmin()).hasAnyRole("USER", "ADMIN")
+                                .requestMatchers(requestHasAnyRoleUserAdmin()).hasRole("ADMIN")
+                                .requestMatchers(requestHasAnyRoleUserAdmin())
+                                .hasAnyRole("USER", "ADMIN")
                                 .anyRequest().permitAll()
                 ).exceptionHandling(configurer -> {
                     configurer.authenticationEntryPoint(jwtAuthenticationEntryPoint);
@@ -69,15 +77,16 @@ public class SecurityConfig {
         return requestMatchers.toArray(RequestMatcher[]::new);
     }
 
-    // ADMIN 역할을 가진 사용자에게 허용된 요청 매처를 정의합니다.
     private RequestMatcher[] requestHasRoleAdmin() {
-        // 현재 ADMIN 역할을 위한 경로가 없다면 빈 배열 반환
-        return new RequestMatcher[0];
+
+        return null;
     }
 
-    // USER 및 ADMIN 역할을 가진 사용자에게 허용된 요청 매처를 정의합니다.
     private RequestMatcher[] requestHasAnyRoleUserAdmin() {
-        // 현재 USER 및 ADMIN 역할을 위한 경로가 없다면 빈 배열 반환
-        return new RequestMatcher[0];
+
+        List<RequestMatcher> requestMatchers = List.of(
+                antMatcher("/api/comment") // 보류
+        );
+        return requestMatchers.toArray(RequestMatcher[]::new);
     }
 }
