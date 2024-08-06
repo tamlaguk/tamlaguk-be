@@ -69,11 +69,15 @@ public class SecurityConfig {
         return requestMatchers.toArray(RequestMatcher[]::new);
     }
 
+    // ADMIN 역할을 가진 사용자에게 허용된 요청 매처를 정의합니다.
     private RequestMatcher[] requestHasRoleAdmin() {
-        return null;
+        // 현재 ADMIN 역할을 위한 경로가 없다면 빈 배열 반환
+        return new RequestMatcher[0];
     }
 
+    // USER 및 ADMIN 역할을 가진 사용자에게 허용된 요청 매처를 정의합니다.
     private RequestMatcher[] requestHasAnyRoleUserAdmin() {
-        return null;
+        // 현재 USER 및 ADMIN 역할을 위한 경로가 없다면 빈 배열 반환
+        return new RequestMatcher[0];
     }
 }
