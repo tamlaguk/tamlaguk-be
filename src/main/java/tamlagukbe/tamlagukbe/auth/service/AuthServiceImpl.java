@@ -55,7 +55,8 @@ public class AuthServiceImpl implements AuthService {
         return generateToken(authentication.getName(), getAuthorities(authentication));
     }
 
-    private TokenDto generateToken(String email, String roleType) {
+    @Override
+    public TokenDto generateToken(String email, String roleType) {
         TokenDto tokenDto = tokenProvider.generateToken(email, roleType);
 
         redisService.setDataExpire(REFRESH_TOKEN_PREFIX + tokenDto.getAccessToken(),
