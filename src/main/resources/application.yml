@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
-    url: jdbc:mariadb://3.34.132.3:3306/tamlaguk?characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    url: jdbc:mariadb://mariadb/tamlaguk?characterEncoding=UTF-8&serverTimezone=Asia/Seoul
     username: root
-    password: s5554549
+    password: root
 
   jpa:
     hibernate:
@@ -17,7 +17,7 @@ spring:
 
   data:
     redis:
-      host: 3.34.132.3
+      host: redis
       port: 6379
 
   jwt:
@@ -35,7 +35,7 @@ spring:
       max-file-size: 30MB             # 한개 파일의 최대 사이즈 (default: 1MB)
       max-request-size: 30MB          # 한개 요청의 최대 사이즈 (default: 10MB)
 
-#aws
+# aws
 cloud:
   aws:
     s3:
