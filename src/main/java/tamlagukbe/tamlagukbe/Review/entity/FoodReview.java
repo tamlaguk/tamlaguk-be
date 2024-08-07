@@ -1,9 +1,18 @@
 package tamlagukbe.tamlagukbe.Review.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import tamlagukbe.tamlagukbe.foodselect.entity.Food;
+import tamlagukbe.tamlagukbe.member.entity.Member;
+import tamlagukbe.tamlagukbe.placeselect.entity.Place;
 
 import java.time.LocalDateTime;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "food_review")
 public class FoodReview {
@@ -17,8 +26,8 @@ public class FoodReview {
     private Member userId;
 
     @ManyToOne
-    @JoinColumn(name = "place_id", nullable = false)
-    private Place placeId;
+    @JoinColumn(name = "food_id", nullable = false)
+    private Food foodId;
 
     @Column(name = "audioUrl", nullable = false, length = 255)
     private String audioUrl;

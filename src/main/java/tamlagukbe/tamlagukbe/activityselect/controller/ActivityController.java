@@ -34,7 +34,7 @@ public class ActivityController {
             // Activity 객체를 ActivityDto로 변환하여 반환
             ActivityDto activityDto = new ActivityDto();
             activityDto.setId(activity.getId());
-            activityDto.setName(activity.getName());
+            activityDto.setActivityStoreName(activity.getActivityStoreName());
             activityDto.setCategory(activity.getCategory());
             System.out.println("Randomly selected activity DTO: " + activityDto); // 로그 출력
             return activityDto;

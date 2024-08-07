@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ActivityDto {
     private Long id;
-    private String name;
+    private String activityStoreName;
     private String category;
 }

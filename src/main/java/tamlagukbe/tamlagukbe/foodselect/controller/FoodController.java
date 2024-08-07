@@ -34,7 +34,7 @@ public class FoodController {
             // Food 객체를 FoodDto로 변환하여 반환
             FoodDto foodDto = new FoodDto();
             foodDto.setId(food.getId());
-            foodDto.setName(food.getName());
+            foodDto.setFoodStoreName(food.getFoodStoreName());
             foodDto.setCategory(food.getCategory());
             System.out.println("Randomly selected food DTO: " + foodDto); // 로그 출력
             return foodDto;

@@ -1,9 +1,18 @@
 package tamlagukbe.tamlagukbe.Review.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import tamlagukbe.tamlagukbe.activityselect.entity.Activity;
+import tamlagukbe.tamlagukbe.member.entity.Member;
+import tamlagukbe.tamlagukbe.placeselect.entity.Place;
 
 import java.time.LocalDateTime;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "activity_review")
 public class ActivityReview {
@@ -14,11 +23,11 @@ public class ActivityReview {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private Member user;
+    private Member userId;
 
     @ManyToOne
-    @JoinColumn(name = "place_id", nullable = false)
-    private PlaceReview placeReview;
+    @JoinColumn(name = "activity_id", nullable = false)
+    private Activity activityId;
 
     @Column(name = "audioUrl", nullable = false, length = 255)
     private String audioUrl;

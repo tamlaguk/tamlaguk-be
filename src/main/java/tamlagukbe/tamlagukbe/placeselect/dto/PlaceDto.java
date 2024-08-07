@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class PlaceDto {
     private Long id;
-    private String name;
+    private String placeStoreName;
     private String category;
 }

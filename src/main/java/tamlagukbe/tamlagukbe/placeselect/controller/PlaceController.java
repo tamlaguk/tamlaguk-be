@@ -34,7 +34,7 @@ public class PlaceController {
             // Place 객체를 PlaceDto로 변환하여 반환
             PlaceDto placeDto = new PlaceDto();
             placeDto.setId(place.getId());
-            placeDto.setName(place.getName());
+            placeDto.setPlaceStoreName(place.getPlaceStoreName());
             placeDto.setCategory(place.getCategory());
             System.out.println("Randomly selected place DTO: " + placeDto); // 로그 출력
             return placeDto;

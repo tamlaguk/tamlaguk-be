@@ -1,27 +1,30 @@
 package tamlagukbe.tamlagukbe.Review.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.google.gson.Gson;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import tamlagukbe.tamlagukbe.Review.dto.TranscriptResponse;
 import tamlagukbe.tamlagukbe.Review.entity.PlaceReview;
 import tamlagukbe.tamlagukbe.Review.repository.PlaceReviewRepository;
+import tamlagukbe.tamlagukbe.global.util.aws.service.AwsS3Service;
+import tamlagukbe.tamlagukbe.member.entity.Member;
+import tamlagukbe.tamlagukbe.member.repository.MemberRepository;
+import tamlagukbe.tamlagukbe.placeselect.entity.Place;
+import tamlagukbe.tamlagukbe.placeselect.repository.PlaceRepository;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class PlaceReviewService {
     @Value("${openai.api.transcription-url}")
     private String transcriptionUrl;
@@ -32,18 +35,17 @@ public class PlaceReviewService {
     @Value("${openai.api.key}")
     private String apiKey;
 
-    @Value("${upload.path}")
-    private String uploadPath;
+    private final RestTemplate restTemplate;
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private final PlaceReviewRepository placeReviewRepository;
+    private final PlaceRepository placeRepository;
+    private final MemberRepository memberRepository;
 
-    @Autowired
-    private PlaceReviewRepository placeReviewRepository;
+    private final AwsS3Service awsS3Service;
 
-    public PlaceReview transcribe(MultipartFile audioFile, Long userId, Long placeId) throws IOException {
-        // 파일 저장
-        String fileName = saveFile(audioFile);
+    public PlaceReview transcribe(MultipartFile audioFile, Long userId, Long placeStoreId) throws IOException {
+        // S3에 음성 파일 저장 -> URL 반환
+        String audioUrl = uploadAudioUrl(audioFile);
 
         // OpenAI API 호출하여 음성 파일을 텍스트로 변환
         String transcript = transcribeAudio(audioFile);
@@ -51,11 +53,17 @@ public class PlaceReviewService {
         // 감정 평가 호출
         String sentiment = evaluateSentiment(transcript);
 
+        // Member 및 Place 엔터티를 가져오기
+        Member member = memberRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Member not found"));
+        Place place = placeRepository.findById(placeStoreId)
+                .orElseThrow(() -> new RuntimeException("Place not found"));
+
         // 결과 저장
         PlaceReview review = new PlaceReview();
-        review.setUserId(userId);
-        review.setPlaceId(placeId);
-        review.setAudioUrl(uploadPath + "/" + fileName);
+        review.setUserId(member);
+        review.setPlaceId(place); // Place 엔터티를 설정
+        review.setAudioUrl(audioUrl);
         review.setContent(transcript);
         review.setSentiment(sentiment);
         review.setCreatedAt(LocalDateTime.now());
@@ -67,15 +75,12 @@ public class PlaceReviewService {
         return review;
     }
 
-    public List<PlaceReview> getReviews() {
-        return placeReviewRepository.findAll();
+    public PlaceReview getReviewById(Long reviewId) {
+        return placeReviewRepository.findById(reviewId).orElseThrow(() -> new RuntimeException("Review not found"));
     }
 
-    private String saveFile(MultipartFile file) throws IOException {
-        byte[] bytes = file.getBytes();
-        Path path = Paths.get(uploadPath + "/" + file.getOriginalFilename());
-        Files.write(path, bytes);
-        return file.getOriginalFilename();
+    public List<PlaceReview> getReviews() {
+        return placeReviewRepository.findAll();
     }
 
     private String transcribeAudio(MultipartFile audioFile) throws IOException {
@@ -83,43 +88,57 @@ public class PlaceReviewService {
         body.add("file", audioFile.getResource());
         body.add("model", "whisper-1");
 
-        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + apiKey);
 
-        MultiValueMap<String, Object> request = new LinkedMultiValueMap<>();
-        request.add("headers", headers);
-        request.add("body", body);
+        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
 
-        TranscriptResponse response = restTemplate.postForObject(transcriptionUrl, request, TranscriptResponse.class);
-        return response.getTranscript();
+        Map<String, Object> response = restTemplate.postForObject(transcriptionUrl, request, Map.class);
+        return (String) response.get("transcript");
     }
 
     private String evaluateSentiment(String text) {
-        String prompt = "Evaluate the sentiment of the following text as POSITIVE or NEGATIVE:\n\n" + text;
+        String prompt = "Evaluate the sentiment of the following text as POSITIVE or NEGATIVE. Respond only in JSON format. Do not provide any explanations.\n" +
+                "```json\n" +
+                "{\n" +
+                "\"변환 텍스트\": \"" + text + "\",\n" +
+                "\"감정분석결과\": \"\"\n" +
+                "}\n" +
+                "```";
+
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("model", "gpt-3.5-turbo");
         body.add("messages", List.of(
-                new LinkedMultiValueMap<String, String>() {{
-                    add("role", "system");
-                    add("content", "You are a sentiment analysis assistant.");
-                }},
-                new LinkedMultiValueMap<String, String>() {{
-                    add("role", "user");
-                    add("content", prompt);
-                }}
+                Map.of("role", "system", "content", "You are a sentiment analysis assistant."),
+                Map.of("role", "user", "content", prompt)
         ));
 
-        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + apiKey);
 
-        Map<String, Object> response = restTemplate.postForObject(chatUrl, new HttpEntity<>(body, headers), Map.class);
+        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
+
+        Map<String, Object> response = restTemplate.postForObject(chatUrl, request, Map.class);
 
         List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
 
         if (choices != null && !choices.isEmpty()) {
-            return choices.get(0).get("message").toString().trim();
+            String jsonResponse = (String) choices.get(0).get("message");
+            Map<String, String> result = new Gson().fromJson(jsonResponse, Map.class);
+            return result.get("감정분석결과");
         } else {
             return "NEUTRAL";
         }
+    }
+
+    /**
+     * 파일을 AWS S3에 업로드하고 그에 대한 URL 을 반환합니다.
+     * @param multipartFile 업로드할 파일
+     * @return 업로드된 파일의 S3 URL
+     */
+    private String uploadAudioUrl(MultipartFile multipartFile) {
+        String fileName = awsS3Service.generateFileName(multipartFile);
+        awsS3Service.uploadToS3(multipartFile, fileName);
+        return awsS3Service.getUrl(fileName);
     }
 }
