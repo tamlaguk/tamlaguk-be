@@ -7,40 +7,32 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 
 @RestController
 public class ActivityController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ActivityController.class);
 
     @Autowired
     private ActivityService activityService;
 
     @GetMapping("/random-activity")
-    public ActivityDto getRandomActivity(@RequestParam String category) {
-        try {
-            // URL 인코딩된 한글을 디코딩
-            String decodedCategory = URLDecoder.decode(category, "UTF-8");
-            System.out.println("Decoded category: " + decodedCategory); // 디코딩된 카테고리 로그 출력
-
-            // 디코딩된 카테고리를 사용하여 Activity 객체를 가져옴
-            Activity activity = activityService.getRandomActivityByCategory(decodedCategory);
-            if (activity == null) {
-                System.out.println("No activity found for category: " + decodedCategory);
-                return null; // 또는 적절히 처리
-            }
-
-            // Activity 객체를 ActivityDto로 변환하여 반환
-            ActivityDto activityDto = new ActivityDto();
-            activityDto.setId(activity.getId());
-            activityDto.setName(activity.getName());
-            activityDto.setCategory(activity.getCategory());
-            System.out.println("Randomly selected activity DTO: " + activityDto); // 로그 출력
-            return activityDto;
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return null; // 또는 적절히 예외 처리
+    public ResponseEntity<ActivityDto> getRandomActivity(@RequestParam String category) {
+        Activity activity = activityService.getRandomActivityByCategory(category);
+        if (activity == null) {
+            logger.warn("No activity found for category: {}", category);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 상태 코드 반환
         }
+
+        ActivityDto activityDto = new ActivityDto();
+        activityDto.setId(activity.getId());
+        activityDto.setName(activity.getName());
+        activityDto.setCategory(activity.getCategory());
+        logger.info("Randomly selected activity DTO: {}", activityDto);
+        return new ResponseEntity<>(activityDto, HttpStatus.OK);
     }
 }
