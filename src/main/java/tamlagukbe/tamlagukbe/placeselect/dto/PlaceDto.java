@@ -12,5 +12,5 @@ import lombok.NoArgsConstructor;
 public class PlaceDto {
     private Long id;
     private String name;
-    private String category;
+    private String existsFree; // existsFree 필드 추가
 }

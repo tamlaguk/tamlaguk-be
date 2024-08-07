@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "food") // 테이블명 관련 수정
+@Table(name = "foods") // 테이블명 관련 수정
 public class Food {
 
     @Id
