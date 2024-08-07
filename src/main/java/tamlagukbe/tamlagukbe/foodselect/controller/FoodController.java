@@ -7,40 +7,32 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 
 @RestController
 public class FoodController {
+
+    private static final Logger logger = LoggerFactory.getLogger(FoodController.class);
 
     @Autowired
     private FoodService foodService;
 
     @GetMapping("/random-food")
-    public FoodDto getRandomFood(@RequestParam String category) {
-        try {
-            // URL 인코딩된 한글을 디코딩
-            String decodedCategory = URLDecoder.decode(category, "UTF-8");
-            System.out.println("Decoded category: " + decodedCategory); // 디코딩된 카테고리 로그 출력
-
-            // 디코딩된 카테고리를 사용하여 Food 객체를 가져옴
-            Food food = foodService.getRandomFoodByCategory(decodedCategory);
-            if (food == null) {
-                System.out.println("No food found for category: " + decodedCategory);
-                return null; // 또는 적절히 처리
-            }
-
-            // Food 객체를 FoodDto로 변환하여 반환
-            FoodDto foodDto = new FoodDto();
-            foodDto.setId(food.getId());
-            foodDto.setName(food.getName());
-            foodDto.setCategory(food.getCategory());
-            System.out.println("Randomly selected food DTO: " + foodDto); // 로그 출력
-            return foodDto;
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return null; // 또는 적절히 예외 처리
+    public ResponseEntity<FoodDto> getRandomFood(@RequestParam String category) {
+        Food food = foodService.getRandomFoodByCategory(category);
+        if (food == null) {
+            logger.warn("No food found for category: {}", category);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 상태 코드 반환
         }
+
+        FoodDto foodDto = new FoodDto();
+        foodDto.setId(food.getId());
+        foodDto.setName(food.getName());
+        foodDto.setCategory(food.getCategory());
+        logger.info("Randomly selected food DTO: {}", foodDto);
+        return new ResponseEntity<>(foodDto, HttpStatus.OK);
     }
 }
